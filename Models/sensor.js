@@ -1,6 +1,5 @@
 const db = require("../Database/db");
 
-// Function to insert sensor data or add to existing data if device_id exists
 function insertSensorData(data, callback) {
   db.query(
     "SELECT * FROM Sensor WHERE device_id = ?",
@@ -16,7 +15,7 @@ function insertSensorData(data, callback) {
         });
       } else {
         // Update existing record by appending new data to the array
-        const existingData = JSON.parse(rows[0].data);
+        const existingData = rows[0];
         existingData.push({
           temperature: data.temperature,
           humidity: data.humidity,
@@ -28,7 +27,7 @@ function insertSensorData(data, callback) {
 
         db.query(
           "UPDATE Sensor SET data = ? WHERE device_id = ?",
-          [JSON.stringify(existingData), data.device_id],
+          [existingData, data.device_id],
           (err, result) => {
             if (err) return callback(err);
             callback(null, result);
@@ -47,13 +46,13 @@ function getSensorData(device_id, callback) {
     (err, rows) => {
       if (err) return callback(err);
       if (rows.length === 0) return callback(null, []);
-      const sensorData = JSON.parse(rows[0].data);
+      const sensorData = rows[0];
       callback(null, sensorData);
     }
   );
 }
 
-// Function to update sensor data for a device_id
+// Function to update sensor data fßor a device_id
 function updateSensorData(device_id, newData, callback) {
   db.query(
     "UPDATE Sensor SET data = ? WHERE device_id = ?",
