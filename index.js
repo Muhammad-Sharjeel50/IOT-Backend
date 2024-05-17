@@ -32,18 +32,13 @@ function createSensorTable() {
 
 createSensorTable();
 
-db.getConnection((err, connection) => {
+db.connect((err) => {
   if (err) {
-    console.error("Error getting database connection:", err.message);
+    console.error("Error connecting to the database:", err.message);
   } else {
-    console.log("Connected to MySQL database");
-    connection.release();
+    console.log("Connected to the database");
   }
-});
-
-// Handle connection errors
-db.on("error", (err) => {
-  console.error("Database db error:", err.message);
+  db.end();
 });
 
 app.listen(port, () => {
