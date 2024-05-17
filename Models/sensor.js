@@ -1,46 +1,60 @@
 const db = require("../Database/db");
 
 function insertSensorData(data, callback) {
-    db.query(
-      "SELECT * FROM Sensor WHERE device_id = ?",
-      data.device_id,
-      (err, rows) => {
-        if (err) return callback(err);
-  
-        if (rows.length === 0) {
-          // Insert new record if device_id does not exist
-          db.query("INSERT INTO Sensor SET ?", data, (err, result) => {
+  db.query(
+    "SELECT * FROM Sensor WHERE device_id = ?",
+    data.device_id,
+    (err, rows) => {
+      if (err) return callback(err);
+
+      if (rows.length === 0) {
+        // Insert new record if device_id does not exist
+        const voltageArray = Array.isArray(data.voltage) ? data.voltage : [data.voltage];
+        const newData = {
+          device_id: data.device_id,
+          data: JSON.stringify([data]),
+          voltage: JSON.stringify(voltageArray),
+          status: voltageArray.length > 1 ? "threephase" : "singlephase",
+        };
+
+        db.query("INSERT INTO Sensor SET ?", newData, (err, result) => {
+          if (err) return callback(err);
+          callback(null, result);
+        });
+      } else {
+        let existingData = [];
+        let existingVoltage = [];
+        if (rows[0]?.data) {
+          existingData = JSON.parse(rows[0].data);
+        }
+        if (rows[0]?.voltage) {
+          existingVoltage = JSON.parse(rows[0].voltage);
+        }
+
+        existingData.push(data);
+        const voltageArray = Array.isArray(data.voltage) ? data.voltage : [data.voltage];
+        existingVoltage = existingVoltage.concat(voltageArray);
+
+        const status = existingVoltage.length > 1 ? "threephase" : "singlephase";
+
+        db.query(
+          "UPDATE Sensor SET data = ?, voltage = ?, status = ? WHERE device_id = ?",
+          [
+            JSON.stringify(existingData),
+            JSON.stringify(existingVoltage),
+            status,
+            data.device_id,
+          ],
+          (err, result) => {
             if (err) return callback(err);
             callback(null, result);
-          });
-        } else {
-          // Update existing record by appending new data to the existing data
-          const existingData = rows[0]; // Use rows[0] directly
-  
-          const newData = {
-            temperature: data.temperature,
-            humidity: data.humidity,
-            voltage: data.voltage,
-            current: data.current,
-            gas_level: data.gas_level,
-            reading_time: data.reading_time,
-          };
-          
-          const updatedData = { ...existingData, ...newData };
-  
-          db.query(
-            "UPDATE Sensor SET ? WHERE device_id = ?",
-            [updatedData, data.device_id],
-            (err, result) => {
-              if (err) return callback(err);
-              callback(null, result);
-            }
-          );
-        }
+          }
+        );
       }
-    );
-  }
-  
+    }
+  );
+}
+
 
 // Function to fetch all sensor data for a device_id
 function getSensorData(device_id, callback) {
@@ -50,13 +64,20 @@ function getSensorData(device_id, callback) {
     (err, rows) => {
       if (err) return callback(err);
       if (rows.length === 0) return callback(null, []);
-      const sensorData = rows[0];
-      callback(null, sensorData);
+
+      const allData = rows.map((row) => {
+        const parsedData = JSON.parse(row.data);
+        return {
+          ...row,
+          data: parsedData,
+        };
+      });
+
+      callback(null, allData);
     }
   );
 }
 
-// Function to update sensor data fßor a device_id
 function updateSensorData(device_id, newData, callback) {
   db.query(
     "UPDATE Sensor SET data = ? WHERE device_id = ?",

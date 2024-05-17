@@ -27,7 +27,9 @@ function insertSensor(req, res) {
 
   insertSensorData(data, (err, result) => {
     if (err) return res.status(500).send(`Error: ${err.message}`);
-    res.status(201).send("New record created successfully");
+    res
+      .status(201)
+      .send({ message: "New record created successfully", data: data });
   });
 }
 
