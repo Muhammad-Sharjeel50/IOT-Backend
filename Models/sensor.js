@@ -105,9 +105,48 @@ function deleteSensorData(device_id, callback) {
   );
 }
 
+function createUniqueRandomGenerator(max) {
+  let availableNumbers = [];
+
+  function reset() {
+    availableNumbers = Array.from({ length: max + 1 }, (_, i) => i);
+  }
+
+  function getRandomNumber() {
+    if (availableNumbers.length === 0) {
+      reset();
+    }
+
+    const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+    const number = availableNumbers.splice(randomIndex, 1)[0];
+    return number;
+  }
+
+  reset();
+  return getRandomNumber;
+}
+
+function setWifiCredientalsUsingCreds(data, callback) {
+  const uniqueId = createUniqueRandomGenerator(5);
+  data.device_id = uniqueId;
+  db.query("Insert INTO User SET  = ?", data, (err, result) => {
+    if (err) return callback(err);
+    callback(null, result);
+  });
+}
+
+function getWifiCredientalsUsingId(id, callback) {
+  db.query("SELECT * from User WHERE device_id = ?", id, (err, result) => {
+    if (err) return callback(err);
+    callback(null, result);
+  });
+}
+
 module.exports = {
   insertSensorData,
   getSensorData,
   updateSensorData,
   deleteSensorData,
+  setWifiCredientalsUsingCreds,
+  getWifiCredientalsUsingId,
 };

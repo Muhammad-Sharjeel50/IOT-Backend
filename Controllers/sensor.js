@@ -3,6 +3,7 @@ const {
   getSensorData,
   updateSensorData,
   deleteSensorData,
+  getWifiCredientalsUsingId,
 } = require("../Models/sensor");
 
 function insertSensor(req, res) {
@@ -35,7 +36,6 @@ function insertSensor(req, res) {
 
 function fetchSensorData(req, res) {
   const device_id = req.params.device_id;
-
   getSensorData(device_id, (err, data) => {
     if (err) return res.status(500).send(`Error: ${err.message}`);
     res.json(data);
@@ -61,4 +61,31 @@ function deleteSensor(req, res) {
   });
 }
 
-module.exports = { insertSensor, fetchSensorData, updateSensor, deleteSensor };
+function setWifiCredientals(req, res) {
+  const { userId, password } = req.body;
+  const data = {
+    userId: userId,
+    password: password,
+  };
+  getWifiCredientalsUsingId(data, (err, result) => {
+    if (err) return res.status(500).send(`Error: ${err.message}`);
+    res.status(200).send("Wifi credentials get succesfully", result);
+  });
+}
+
+function getWifiCredientals(req, res) {
+  const id = req.params.device_id;
+  getWifiCredientalsUsingId(id, (err, result) => {
+    if (err) return res.status(500).send(`Error: ${err.message}`);
+    res.status(200).send("Wifi credentials get succesfully", result);
+  });
+}
+
+module.exports = {
+  insertSensor,
+  fetchSensorData,
+  updateSensor,
+  deleteSensor,
+  setWifiCredientals,
+  getWifiCredientals,
+};

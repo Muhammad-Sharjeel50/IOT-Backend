@@ -4,11 +4,17 @@ const {
   fetchSensorData,
   updateSensor,
   deleteSensor,
+  getWifiCredientals,
+  setWifiCredientals,
 } = require("../Controllers/sensor");
 
 const router = express.Router();
 
 router.post("/insert", insertSensor);
+
+router.post("/set-wifi-cred", setWifiCredientals);
+
+router.post("/get-wifi-cred", getWifiCredientals);
 
 router.get("/data/:device_id", fetchSensorData);
 
