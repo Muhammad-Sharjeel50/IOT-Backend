@@ -9,7 +9,6 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/sensors", sensorRouter);
 
-// Function to create sensor table if it doesn't exist
 function createSensorTable() {
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS Sensor (
@@ -33,25 +32,60 @@ function createSensorTable() {
     console.log("Sensor table created or already exists");
   });
 }
+function createWifiCredentialsTable() {
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS WifiCredentials (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      ssid VARCHAR(255) NOT NULL,
+      password VARCHAR(255) NOT NULL
+    )
+  `;
+
+  db.query(createTableQuery, (err, results) => {
+    if (err) {
+      console.error('Error creating WifiCredentials table:', err.message);
+    } else {
+      console.log('WifiCredentials table created or already exists');
+    }
+  });
+}
+
+function createUserTable() {
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS User (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      device_id VARCHAR(255) NOT NULL,
+      userId VARCHAR(255) NOT NULL,
+      password VARCHAR(255) NOT NULL
+    )
+  `;
+
+  db.query(createTableQuery, (err, results) => {
+    if (err) {
+      console.error('Error creating User table:', err.message);
+    } else {
+      console.log('User table created or already exists');
+    }
+  });
+}
 
 // Initialize database connection
-db.getConnection((err, connection) => {
+db.connect((err) => {
   if (err) {
-    console.error("Error getting database connection:", err.message);
+    console.error('Error connecting to the database:', err.message);
   } else {
-    console.log("Connected to MySQL database");
-    connection.release();
+    console.log('Connected to the RDS MySQL database');
   }
 });
 
-// Handle database connection errors
 db.on("error", (err) => {
   console.error("Database error:", err.message);
 });
 
-// Create sensor table
-createSensorTable();
 
+createSensorTable();
+createWifiCredentialsTable();
+createUserTable();
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

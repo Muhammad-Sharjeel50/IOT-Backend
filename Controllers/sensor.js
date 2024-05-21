@@ -5,6 +5,7 @@ const {
   deleteSensorData,
   getWifiCredientalsUsingId,
   setWifiConnectionUsingCredentials,
+  setWifiCredientalsUsingCreds,
   getWifiConnectionUsingCredientals,
 } = require("../Models/sensor");
 
@@ -67,13 +68,16 @@ function setWifiCredientals(req, res) {
   const { userId, password } = req.body;
   const data = {
     userId: userId,
-    password: password,
+    password: password
   };
-  getWifiCredientalsUsingId(data, (err, result) => {
+  console.log("data", data);
+
+  setWifiCredientalsUsingCreds(data, (err, result) => {
     if (err) return res.status(500).send(`Error: ${err.message}`);
-    res.status(200).send("Wifi credentials get succesfully", result);
+    res.status(200).send({ message: "Wifi credentials set successfully", result });
   });
 }
+
 
 function getWifiCredientals(req, res) {
   const id = req.params.device_id;

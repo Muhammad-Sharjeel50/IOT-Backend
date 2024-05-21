@@ -109,35 +109,47 @@ function deleteSensorData(device_id, callback) {
   );
 }
 
-function createUniqueRandomGenerator(max) {
-  let availableNumbers = [];
-
-  function reset() {
-    availableNumbers = Array.from({ length: max + 1 }, (_, i) => i);
+function createUniqueRandomNumbers(max, count) {
+  if (count > max + 1) {
+    throw new Error("Count cannot be greater than the range of unique numbers.");
   }
 
-  function getRandomNumber() {
-    if (availableNumbers.length === 0) {
-      reset();
-    }
+  let availableNumbers = Array.from({ length: max + 1 }, (_, i) => i);
+  let uniqueNumbers = [];
 
+  for (let i = 0; i < count; i++) {
     const randomIndex = Math.floor(Math.random() * availableNumbers.length);
     const number = availableNumbers.splice(randomIndex, 1)[0];
-    return number;
+    uniqueNumbers.push(number);
   }
 
-  reset();
-  return getRandomNumber;
+  return uniqueNumbers;
 }
 
+
 function setWifiCredientalsUsingCreds(data, callback) {
-  const uniqueId = createUniqueRandomGenerator(5);
+  const uniqueId = createUniqueRandomNumbers(100, 5);
   data.device_id = uniqueId;
-  db.query("Insert INTO User SET  = ?", data, (err, result) => {
+  console.log(data);
+
+  const checkUserSql = "SELECT * FROM User WHERE userId = ?";
+  db.query(checkUserSql, [data.userId], (err, results) => {
     if (err) return callback(err);
-    callback(null, result);
+
+    if (results.length > 0) {
+      return callback(new Error("User already exists"));
+    }
+
+    const sql = "INSERT INTO User (userId, password, device_id) VALUES (?, ?, ?)";
+    const values = [data.userId, data.password, JSON.stringify(data.device_id)];
+
+    db.query(sql, values, (err, result) => {
+      if (err) return callback(err);
+      callback(null, result);
+    });
   });
 }
+
 
 function getWifiCredientalsUsingId(id, callback) {
   db.query("SELECT * from User WHERE device_id = ?", id, (err, result) => {
