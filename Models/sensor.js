@@ -179,12 +179,12 @@ function setWifiConnectionUsingCredentials({ ssid, password }, callback) {
           "INSERT INTO WifiCredentials (ssid, password) VALUES (?, ?)";
         db.query(query, [ssid, password], (err, result) => {
           if (err) {
-            return callback(null, err);
+            return callback(err);
           }
-          callback(
-            null,
-            `Connected to ${ssid} and credentials stored successfully`
-          );
+          callback(null, {
+            message: `Connected to ${ssid} and credentials stored successfully`,
+            result,
+          });
         });
       } else {
         callback(
@@ -211,10 +211,11 @@ function getWifiConnectionUsingCredientals({ ssid, password }, callback) {
       );
     }
 
-    const { ssid, password } = results[0];
-    callback(null, { ssid, password });
+    const credentials = results[0];
+    callback(null, credentials);
   });
 }
+
 
 module.exports = {
   insertSensorData,

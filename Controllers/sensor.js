@@ -91,20 +91,23 @@ function getWifiCredientals(req, res) {
 function setWifiConnection(req, res) {
   const { ssid, password } = req.body;
   setWifiConnectionUsingCredentials({ ssid, password }, (err, result) => {
-    if (err) return res.status(500).json(`Error : ${err.message}`);
-    res.status(200).json("Wifi credentials set successfully", result);
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.status(200).json(result);
   });
 }
 
 function getWifiConnection(req, res) {
   const { ssid, password } = req.body;
   getWifiConnectionUsingCredientals({ ssid, password }, (err, result) => {
-    if (err) return res.status(500).json(`Error : ${err.message}`);
+    if (err) return res.status(500).json({ error: err.message });
     res
       .status(200)
-      .json({ message: "Wifi credentials get successfully", data: result });
+      .json({ message: "Wifi credentials retrieved successfully", data: result });
   });
 }
+
 
 module.exports = {
   insertSensor,
