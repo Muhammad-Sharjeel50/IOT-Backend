@@ -167,7 +167,7 @@ function setWifiConnectionUsingCredentials({ ssid, password }, callback) {
           "INSERT INTO WifiCredentials (ssid, password) VALUES (?, ?)";
         db.query(query, [ssid, password], (err, result) => {
           if (err) {
-            return err;
+            return callback(null, err);
           }
           callback(
             null,
@@ -185,18 +185,17 @@ function setWifiConnectionUsingCredentials({ ssid, password }, callback) {
   });
 }
 
-function getWifiConnectionUsingCredientals(ssid, password, callback) {
+function getWifiConnectionUsingCredientals({ ssid, password }, callback) {
   const query = `SELECT ssid, password FROM WifiCredentials WHERE ssid = ? AND password = ?`;
   db.query(query, [ssid, password], (err, results) => {
     if (err) {
-      return callback(null, results);
+      return callback(err);
     }
 
     if (results.length === 0) {
       return callback(
-        new Error(
-          `No credentials found for SSID: ${ssid} and password: ${password}`
-        )
+        null,
+        `No credentials found for SSID: ${ssid} and password: ${password}`
       );
     }
 
