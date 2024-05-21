@@ -4,6 +4,8 @@ const {
   updateSensorData,
   deleteSensorData,
   getWifiCredientalsUsingId,
+  setWifiConnectionUsingCredentials,
+  getWifiConnectionUsingCredientals,
 } = require("../Models/sensor");
 
 function insertSensor(req, res) {
@@ -81,6 +83,24 @@ function getWifiCredientals(req, res) {
   });
 }
 
+function setWifiConnection(req, res) {
+  const { ssid, password } = req.body;
+  setWifiConnectionUsingCredentials({ ssid, password }, (err, result) => {
+    if (err) return res.status(500).json(`Error : ${err.message}`);
+    res.status(200).json("Wifi credentials set successfully");
+  });
+}
+
+function getWifiConnection(req, res) {
+  const { ssid, password } = req.body;
+  getWifiConnectionUsingCredientals({ ssid, password }, (err, result) => {
+    if (err) return res.status(500).json(`Error : ${err.message}`);
+    res
+      .status(200)
+      .json({ message: "Wifi credentials get successfully", data: result });
+  });
+}
+
 module.exports = {
   insertSensor,
   fetchSensorData,
@@ -88,4 +108,6 @@ module.exports = {
   deleteSensor,
   setWifiCredientals,
   getWifiCredientals,
+  setWifiConnection,
+  getWifiConnection,
 };

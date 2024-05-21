@@ -1,4 +1,9 @@
 const db = require("../Database/db");
+const wifi = require("node-wifi");
+
+wifi.init({
+  iface: null,
+});
 
 function insertSensorData(data, callback) {
   db.query(
@@ -8,7 +13,6 @@ function insertSensorData(data, callback) {
       if (err) return callback(err);
 
       if (rows.length === 0) {
-        // Insert new record if device_id does not exist
         const voltageArray = Array.isArray(data.voltage)
           ? data.voltage
           : [data.voltage];
@@ -142,6 +146,65 @@ function getWifiCredientalsUsingId(id, callback) {
   });
 }
 
+function setWifiConnectionUsingCredentials({ ssid, password }, callback) {
+  wifi.connect({ ssid, password }, (err) => {
+    if (err) {
+      return callback(null, err);
+    }
+
+    wifi.getCurrentConnections((err, currentConnections) => {
+      if (err) {
+        return callback(null, err);
+      }
+
+      const connected = currentConnections.some(
+        (connection) => connection.ssid === ssid
+      );
+
+      if (connected) {
+        // Store the credentials in the database
+        const query =
+          "INSERT INTO WifiCredentials (ssid, password) VALUES (?, ?)";
+        db.query(query, [ssid, password], (err, result) => {
+          if (err) {
+            return err;
+          }
+          callback(
+            null,
+            `Connected to ${ssid} and credentials stored successfully`
+          );
+        });
+      } else {
+        callback(
+          new Error(
+            `Failed to connect to ${ssid}. Incorrect credentials or other error.`
+          )
+        );
+      }
+    });
+  });
+}
+
+function getWifiConnectionUsingCredientals(ssid, password, callback) {
+  const query = `SELECT ssid, password FROM WifiCredentials WHERE ssid = ? AND password = ?`;
+  db.query(query, [ssid, password], (err, results) => {
+    if (err) {
+      return callback(null, results);
+    }
+
+    if (results.length === 0) {
+      return callback(
+        new Error(
+          `No credentials found for SSID: ${ssid} and password: ${password}`
+        )
+      );
+    }
+
+    const { ssid, password } = results[0];
+    callback(null, { ssid, password });
+  });
+}
+
 module.exports = {
   insertSensorData,
   getSensorData,
@@ -149,4 +212,6 @@ module.exports = {
   deleteSensorData,
   setWifiCredientalsUsingCreds,
   getWifiCredientalsUsingId,
+  setWifiConnectionUsingCredentials,
+  getWifiConnectionUsingCredientals,
 };
