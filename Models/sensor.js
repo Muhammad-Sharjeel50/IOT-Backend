@@ -183,7 +183,7 @@ function setWifiConnectionUsingCredentials({ ssid, password }, callback) {
           }
           callback(null, {
             message: `Connected to ${ssid} and credentials stored successfully`,
-            result,
+            data: { ssid: ssid, password: password },
           });
         });
       } else {
@@ -215,7 +215,6 @@ function getWifiConnectionUsingCredientals({ ssid, password }, callback) {
     callback(null, credentials);
   });
 }
-
 
 module.exports = {
   insertSensorData,
