@@ -68,16 +68,17 @@ function setWifiCredientals(req, res) {
   const { userId, password } = req.body;
   const data = {
     userId: userId,
-    password: password
+    password: password,
   };
   console.log("data", data);
 
   setWifiCredientalsUsingCreds(data, (err, result) => {
     if (err) return res.status(500).send(`Error: ${err.message}`);
-    res.status(200).send({ message: "Wifi credentials set successfully", result });
+    res
+      .status(200)
+      .send({ message: "Wifi credentials set successfully", result });
   });
 }
-
 
 function getWifiCredientals(req, res) {
   const id = req.params.device_id;
@@ -91,7 +92,7 @@ function setWifiConnection(req, res) {
   const { ssid, password } = req.body;
   setWifiConnectionUsingCredentials({ ssid, password }, (err, result) => {
     if (err) return res.status(500).json(`Error : ${err.message}`);
-    res.status(200).json("Wifi credentials set successfully");
+    res.status(200).json("Wifi credentials set successfully", result);
   });
 }
 

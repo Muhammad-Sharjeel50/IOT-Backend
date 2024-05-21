@@ -161,12 +161,12 @@ function getWifiCredientalsUsingId(id, callback) {
 function setWifiConnectionUsingCredentials({ ssid, password }, callback) {
   wifi.connect({ ssid, password }, (err) => {
     if (err) {
-      return callback(null, err);
+      return callback(err);
     }
 
     wifi.getCurrentConnections((err, currentConnections) => {
       if (err) {
-        return callback(null, err);
+        return callback(err);
       }
 
       const connected = currentConnections.some(
