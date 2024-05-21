@@ -27,9 +27,7 @@ function createSensorTable() {
   db.query(createTableQuery, (err, results) => {
     if (err) {
       console.error("Error creating table:", err.message);
-      return;
     }
-    console.log("Sensor table created or already exists");
   });
 }
 function createWifiCredentialsTable() {
@@ -44,9 +42,7 @@ function createWifiCredentialsTable() {
   db.query(createTableQuery, (err, results) => {
     if (err) {
       console.error('Error creating WifiCredentials table:', err.message);
-    } else {
-      console.log('WifiCredentials table created or already exists');
-    }
+    } 
   });
 }
 
@@ -63,8 +59,6 @@ function createUserTable() {
   db.query(createTableQuery, (err, results) => {
     if (err) {
       console.error('Error creating User table:', err.message);
-    } else {
-      console.log('User table created or already exists');
     }
   });
 }
