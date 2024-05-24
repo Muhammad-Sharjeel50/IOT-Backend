@@ -1,6 +1,5 @@
 const db = require("../Database/db");
 const wifi = require("node-wifi");
-
 wifi.init({
   iface: null,
 });
@@ -8,52 +7,61 @@ wifi.init({
 function insertSensorData(data, callback) {
   db.query(
     "SELECT * FROM Sensor WHERE device_id = ?",
-    data.device_id,
+    [data.device_id],
     (err, rows) => {
       if (err) return callback(err);
+      const voltageArray = Array.isArray(data.voltage)
+        ? data.voltage
+        : [data.voltage];
 
       if (rows.length === 0) {
-        const voltageArray = Array.isArray(data.voltage)
-          ? data.voltage
-          : [data.voltage];
         const newData = {
           device_id: data.device_id,
+          temperature: data.temperature,
+          humidity: data.humidity,
+          voltage: voltageArray,
+          power: data.power,
+          carbon_dioxide: data.carbon_dioxide,
+          pollutant: data.pollutant,
+          gas_level: data.gas_level,
+          reading_time: data.reading_time,
+          reading_date: data.reading_date,
           data: JSON.stringify([data]),
-          voltage: JSON.stringify(voltageArray),
           status: voltageArray.length > 1 ? "threephase" : "singlephase",
         };
 
         db.query("INSERT INTO Sensor SET ?", newData, (err, result) => {
           if (err) return callback(err);
-          callback(null, result);
+          callback(null, newData);
         });
       } else {
+        // Existing entry found, update it
         let existingData = [];
-        let existingVoltage = [];
         if (rows[0]?.data) {
           existingData = JSON.parse(rows[0].data);
         }
-        if (rows[0]?.voltage) {
-          existingVoltage = JSON.parse(rows[0].voltage);
-        }
 
         existingData.push(data);
-        const voltageArray = Array.isArray(data.voltage)
-          ? data.voltage
-          : [data.voltage];
-        existingVoltage = existingVoltage.concat(voltageArray);
 
-        const status =
-          existingVoltage.length > 1 ? "threephase" : "singlephase";
+        const status = voltageArray.length > 1 ? "threephase" : "singlephase";
+
+        const updatedData = {
+          temperature: data.temperature,
+          humidity: data.humidity,
+          voltage: voltageArray,
+          power: data.power,
+          carbon_dioxide: data.carbon_dioxide,
+          pollutant: data.pollutant,
+          gas_level: data.gas_level,
+          reading_time: data.reading_time,
+          reading_date: data.reading_date,
+          data: JSON.stringify(existingData),
+          status: status,
+        };
 
         db.query(
-          "UPDATE Sensor SET data = ?, voltage = ?, status = ? WHERE device_id = ?",
-          [
-            JSON.stringify(existingData),
-            JSON.stringify(existingVoltage),
-            status,
-            data.device_id,
-          ],
+          "UPDATE Sensor SET ? WHERE device_id = ?",
+          [updatedData, data.device_id],
           (err, result) => {
             if (err) return callback(err);
             callback(null, result);
@@ -216,6 +224,60 @@ function getWifiConnectionUsingCredientals({ ssid, password }, callback) {
   });
 }
 
+function updateDeviceStatus(data, callback) {
+  db.query(
+    "SELECT * FROM Devices WHERE device_id = ?",
+    [data.device_id],
+    (err, rows) => {
+      if (err) return callback(err);
+
+      if (rows.length === 0) {
+        return callback(new Error("Device not found"));
+      }
+
+      db.query(
+        "UPDATE Devices SET status = ? WHERE device_id = ?",
+        [data.status, data.device_id],
+        (err, result) => {
+          if (err) return callback(err);
+          callback(null, {
+            message: `Device ${data.device_id} turned ${data.status} successfully`,
+          });
+        }
+      );
+    }
+  );
+}
+
+function registerDevice(data, callback) {
+  const { device_id, device_name, email } = data;
+
+  db.query("SELECT * FROM Devices WHERE device_id = ?", [device_id], (err, rows) => {
+    if (err) return callback(err);
+
+    if (rows.length > 0) {
+      return callback(new Error('Device already exists'));
+    }
+
+    const newDevice = { device_id, device_name, email, status: 'off' };
+
+    db.query("INSERT INTO Devices SET ?", newDevice, (err, result) => {
+      if (err) return callback(err);
+      callback(null, { message: 'Device registered successfully', data: newDevice });
+    });
+  });
+}
+
+function getDeviceById(device_id, callback) {
+  db.query("SELECT * FROM Devices WHERE device_id = ?", [device_id], (err, rows) => {
+    if (err) return callback(err);
+    if (rows.length === 0) return callback(new Error('Device not found'));
+
+    callback(null, rows[0]);
+  });
+}
+
+
 module.exports = {
   insertSensorData,
   getSensorData,
@@ -225,4 +287,7 @@ module.exports = {
   getWifiCredientalsUsingId,
   setWifiConnectionUsingCredentials,
   getWifiConnectionUsingCredientals,
+  updateDeviceStatus,
+  registerDevice,
+  getDeviceById
 };

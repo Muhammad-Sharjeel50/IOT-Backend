@@ -16,10 +16,13 @@ function createSensorTable() {
       device_id VARCHAR(255) NOT NULL,
       temperature FLOAT,
       humidity FLOAT,
+      power FLOAT,
       voltage JSON,
-      current FLOAT,
+      carbon_dioxide FLOAT,
+      pollutant VARCHAR(50),
       gas_level FLOAT,
-      reading_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      reading_time TIME,
+      reading_date DATE,
       data JSON,
       status VARCHAR(50)
     )
@@ -30,6 +33,7 @@ function createSensorTable() {
     }
   });
 }
+
 function createWifiCredentialsTable() {
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS WifiCredentials (
@@ -41,8 +45,8 @@ function createWifiCredentialsTable() {
 
   db.query(createTableQuery, (err, results) => {
     if (err) {
-      console.error('Error creating WifiCredentials table:', err.message);
-    } 
+      console.error("Error creating WifiCredentials table:", err.message);
+    }
   });
 }
 
@@ -58,17 +62,32 @@ function createUserTable() {
 
   db.query(createTableQuery, (err, results) => {
     if (err) {
-      console.error('Error creating User table:', err.message);
+      console.error("Error creating User table:", err.message);
     }
   });
 }
 
-// Initialize database connection
+function createDeviceTable() {
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS Devices (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+  device_id VARCHAR(255) NOT NULL UNIQUE,
+  status ENUM('on', 'off') DEFAULT 'off'
+    )
+  `;
+
+  db.query(createTableQuery, (err, results) => {
+    if (err) {
+      console.error("Error creating Device table:", err.message);
+    }
+  });
+}
+
 db.connect((err) => {
   if (err) {
-    console.error('Error connecting to the database:', err.message);
+    console.error("Error connecting to the database:", err.message);
   } else {
-    console.log('Connected to the RDS MySQL database');
+    console.log("Connected to the RDS MySQL database");
   }
 });
 
@@ -76,10 +95,10 @@ db.on("error", (err) => {
   console.error("Database error:", err.message);
 });
 
-
 createSensorTable();
 createWifiCredentialsTable();
 createUserTable();
+createDeviceTable();
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

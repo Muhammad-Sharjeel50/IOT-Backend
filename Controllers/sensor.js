@@ -7,7 +7,9 @@ const {
   setWifiConnectionUsingCredentials,
   setWifiCredientalsUsingCreds,
   getWifiConnectionUsingCredientals,
-} = require("../Models/sensor");
+  updateDeviceStatus,
+  registerDevice,
+} = require("../Services/sensor");
 
 function insertSensor(req, res) {
   const {
@@ -15,18 +17,24 @@ function insertSensor(req, res) {
     temperature,
     humidity,
     voltage,
-    current,
+    power,
+    carbon_dioxide,
+    pollutant,
     gas_level,
     reading_time,
+    reading_date,
   } = req.body;
   const data = {
     device_id,
     temperature,
     humidity,
     voltage,
-    current,
+    power,
+    carbon_dioxide,
+    pollutant,
     gas_level,
     reading_time,
+    reading_date,
   };
 
   insertSensorData(data, (err, result) => {
@@ -102,12 +110,74 @@ function getWifiConnection(req, res) {
   const { ssid, password } = req.body;
   getWifiConnectionUsingCredientals({ ssid, password }, (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
-    res
-      .status(200)
-      .json({
-        message: "Wifi credentials retrieved successfully",
-        data: { ssid: ssid, password: password },
-      });
+    res.status(200).json({
+      message: "Wifi credentials retrieved successfully",
+      data: { ssid: ssid, password: password },
+    });
+  });
+}
+
+function deviceStatus(req, res) {
+  const { device_id, status } = req.body;
+  console.log("device ID::", device_id, status);
+  if (!["on", "off"].includes(status)) {
+    return res
+      .status(400)
+      .send({ message: "Invalid status. Use 'on' or 'off'." });
+  }
+
+  const data = { device_id, status };
+
+  updateDeviceStatus(data, (err, result) => {
+    if (err) {
+      if (err.message === "Device not found") {
+        return res.status(404).send({ message: err.message });
+      }
+      console.error(`Error updating device status: ${err.message}`);
+      return res
+        .status(500)
+        .send(`Internal server error. Please try again later.`);
+    }
+
+    res.status(200).send(result);
+  });
+}
+
+function registerDevices(req, res) {
+  const { device_id, device_name, email } = req.body;
+
+  const data = { device_id, device_name, email };
+
+  registerDevice(data, (err, result) => {
+    if (err) {
+      if (err.message === "Device already exists") {
+        return res.status(409).send({ message: err.message });
+      }
+      console.error(`Error registering device: ${err.message}`);
+      return res
+        .status(500)
+        .send(`Internal server error. Please try again later.`);
+    }
+
+    res.status(201).send(result);
+  });
+}
+
+function getRegisterDeviceById(req, res) {
+  const { device_id } = req.params;
+
+  getDeviceById(device_id, (err, result) => {
+    if (err) {
+      if (err.message === "Device not found") {
+        return res.status(404).send({ message: err.message });
+      }
+      console.error(`Error getting device details: ${err.message}`);
+      return res
+        .status(500)
+        .send(`Internal server error. Please try again later.`);
+    }
+
+    res.status(200).send(result);
   });
 }
 
@@ -120,4 +190,7 @@ module.exports = {
   getWifiCredientals,
   setWifiConnection,
   getWifiConnection,
+  deviceStatus,
+  getRegisterDeviceById,
+  registerDevices,
 };
